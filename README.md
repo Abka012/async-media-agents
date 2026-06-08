@@ -27,22 +27,24 @@ A lightweight async multi-agent system that processes images, audio, and video v
 
 ## Features
 
-- ✅ Real media processing (Pillow, OpenCV, stdlib wave)
-- ✅ Parallel agent execution via LangGraph fan-out
-- ✅ MCP (Model Context Protocol) integration via FastMCP
-- ✅ Robust error handling (corrupt base64, invalid formats)
-- ✅ Shared state with `Annotated` reducers for concurrent writes
-- ✅ Minimal base64 payload generators for testing (stdlib-only)
+- ✅ **Real media processing** — Powered by Pillow (Images), OpenCV (Video), and stdlib `wave` (Audio).
+- ✅ **Parallel execution** — High-performance fan-out/fan-in orchestration using LangGraph.
+- ✅ **MCP Integration** — Model Context Protocol support via FastMCP for tool registration.
+- ✅ **Robust error handling** — Graceful recovery from corrupt base64 or invalid formats.
+- ✅ **Shared state** — Concurrent-safe state management via `Annotated` reducers.
+- ✅ **Type Safety** — Comprehensive static analysis with `basedpyright`.
 
 ## Requirements
 
-```
+```text
 langgraph
 langchain
 fastmcp
 Pillow
 opencv-python-headless
 numpy
+pytest
+pytest-asyncio
 ```
 
 ## Setup
@@ -56,10 +58,6 @@ python -m venv .venv
 # Activate it
 source .venv/bin/activate        # Linux / macOS
 .venv\Scripts\activate           # Windows (cmd)
-.venv\Scripts\Activate.ps1       # Windows (PowerShell)
-
-# Deactivate when done
-deactivate
 ```
 
 ### 2. Install dependencies
@@ -70,44 +68,38 @@ pip install -r requirements.txt
 
 ## Project Structure
 
-```
+```text
 project/
 ├── async_media_agents/
 │   ├── agents/
-│   │   ├── image_agent.py
-│   │   ├── audio_agent.py
-│   │   ├── video_agent.py
-│   │   └── supervisor.py
+│   │   ├── image_agent.py         # Specialized image logic
+│   │   ├── audio_agent.py         # Specialized audio logic
+│   │   ├── video_agent.py         # Specialized video logic
+│   │   └── supervisor.py          # Orchestration & routing
 │   │
 │   ├── tools/
-│   │   ├── mcp_server.py          # FastMCP server + real processor wiring
-│   │   ├── mcp_client.py          # Async client wrapper
-│   │   ├── image_tool.py
-│   │   ├── audio_tool.py
-│   │   ├── video_tool.py
-│   │   └── processors/            # Decoupled processing logic
-│   │       ├── image_processor.py  # Pillow-based
-│   │       ├── audio_processor.py  # stdlib wave
-│   │       └── video_processor.py  # OpenCV-based
+│   │   ├── mcp_server.py          # FastMCP server registration
+│   │   ├── mcp_client.py          # Async client interface
+│   │   └── processors/            # Pure processing logic (decoupled)
+│   │       ├── image_processor.py # Pillow-based
+│   │       ├── audio_processor.py # stdlib wave
+│   │       └── video_processor.py # OpenCV-based
 │   │
 │   ├── graph/
-│   │   └── workflow.py
+│   │   └── workflow.py            # LangGraph workflow definition
 │   │
 │   ├── state/
-│   │   ├── state.py
-│   │   └── shared_memory.py
-│   │
-│   ├── utils/
-│   │   └── requirements.py
+│   │   ├── state.py               # Shared AgentState with reducers
+│   │   └── shared_memory.py       # Global shared context utilities
 │   │
 │   └── __init__.py
 │
 ├── scripts/
-│   └── test_workflow.py           # Payload verification & integration tests
+│   └── test_workflow.py           # Integration & payload tests
 │
-├── main.py                         # Demo entry point
+├── main.py                         # CLI demo & examples
 ├── requirements.txt
-├── pyproject.toml                  # Python + basedpyright config
+├── pyproject.toml                  # Project & Tool configuration
 └── README.md
 ```
 
@@ -119,18 +111,29 @@ project/
 python main.py
 ```
 
-Output shows three examples:
-1. **Text-based routing** — auto-detects task type from user input
-2. **Parallel processing** — fans out to all 3 agents with real base64 payloads
-3. **Supervisor workflow** — routes to a single agent
+The demo demonstrates three core patterns:
+1. **Text-based routing** — Auto-detects task type from user natural language.
+2. **Parallel processing** — Simultaneously processes multiple media types via fan-out.
+3. **Supervisor workflow** — Uses the Supervisor agent to route to a single target.
 
 ### Run tests
 
+Tests can be executed directly or through `pytest`:
+
 ```bash
+# Direct execution (includes payload generation logs)
 python scripts/test_workflow.py
+
+# Using pytest
+pytest scripts/test_workflow.py
 ```
 
-8 tests covering payload integrity, metadata extraction, parallel transport, partial payloads, and error handling.
+The test suite covers:
+- Base64 payload integrity (PNG, WAV, MP4)
+- Real metadata extraction via processors
+- Parallel transport through the workflow
+- Partial payload handling
+- Robust error handling for corrupted data
 
 ### Programmatic use
 
